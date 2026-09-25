@@ -1,0 +1,65 @@
+name: Verify published image on a second host
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: Docker Hub repository
+        type: choice
+        options: [task4-hello, task4-pinboard]
+        required: true
+      digest:
+        description: Published sha256 digest
+        required: true
+      public_url:
+        description: Optional public HTTPS demonstration URL
+        required: false
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Pull and run the published image
+        env:
+          REPOSITORY: ${{ inputs.repository }}
+          DIGEST: ${{ inputs.digest }}
+          PUBLIC_URL: ${{ inputs.public_url }}
+        run: |
+          set -euo pipefail
+          [[ "$REPOSITORY" =~ ^task4-(hello|pinboard)$ ]]
+          [[ "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
+          mkdir evidence
+          {
+            date -u
+            hostname
+            uname -a
+            docker version
+            image="darksoda/$REPOSITORY@$DIGEST"
+            docker pull "$image"
+            docker image inspect "$image" --format 'digests={{json .RepoDigests}} user={{.Config.User}}'
+            secret=$(openssl rand -hex 32)
+            docker run -d --name task4-remote -p 127.0.0.1:8080:8000 -e SECRET_KEY="$secret" -e APP_ENV=second-host "$image"
+            for attempt in $(seq 1 30); do
+              if curl --fail --silent http://127.0.0.1:8080/healthz; then break; fi
+              sleep 1
+            done
+            curl --fail --show-error http://127.0.0.1:8080/healthz
+            curl --fail --show-error http://127.0.0.1:8080/
+            docker inspect task4-remote --format 'image={{.Image}} status={{.State.Status}} ports={{json .NetworkSettings.Ports}}'
+            docker logs task4-remote
+            if [ -n "$PUBLIC_URL" ]; then
+              [[ "$PUBLIC_URL" =~ ^https://[a-z0-9-]+\.trycloudflare\.com$ ]]
+              curl --fail --show-error --retry 3 "$PUBLIC_URL/healthz"
+              curl --fail --show-error "$PUBLIC_URL/"
+            fi
+          } 2>&1 | tee evidence/second-host.log
+      - name: Capture container logs
+        if: always()
+        run: docker logs task4-remote > evidence/container.log 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: second-host-evidence
+          path: evidence/
+          retention-days: 30
