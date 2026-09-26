@@ -121,6 +121,8 @@ Browser tests expect Pinboard on port 8081. Set `BASE_URL` to test a different d
 
 Image names are `darksoda/task4-hello`, `darksoda/task4-pinboard`, and `darksoda/task4-notes-export`. Publication is a separate step from building:
 
+The verified release references and source revisions are in [images.lock.json](images.lock.json). Use the digest reference when you need the exact published image. These releases target Linux AMD64; other architectures need a local build or emulation.
+
 ```bash
 docker login
 bash scripts/publish-image.sh task4-hello 0.2.0

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "images": {
+    "hello": {
+      "tag": "darksoda/task4-hello:0.2.0",
+      "reference": "darksoda/task4-hello@sha256:796a97bd9bf775ba71ae92ad51839d640280b86af7f4381620bcb7202b72c2c5",
+      "source_revision": "92141926eac8fa0f395ef22ba6a3f49073fa405e",
+      "platform": "linux/amd64"
+    },
+    "pinboard": {
+      "tag": "darksoda/task4-pinboard:0.3.0",
+      "reference": "darksoda/task4-pinboard@sha256:329143f99375840f9ea1958d818930167f8f21a13792bb9d5596db6c1b350698",
+      "source_revision": "2d84f0d23675132956abb28c02a0e4198f80ff09",
+      "platform": "linux/amd64"
+    },
+    "notes-export": {
+      "tag": "darksoda/task4-notes-export:1.0.0",
+      "reference": "darksoda/task4-notes-export@sha256:cee7fe70cbe2c318b8148fead49e33f1e897c544df36a8679a74b0e2ae3068bf",
+      "source_revision": "2d84f0d23675132956abb28c02a0e4198f80ff09",
+      "platform": "linux/amd64"
+    }
+  }
+}
