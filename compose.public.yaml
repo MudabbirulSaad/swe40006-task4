@@ -1,0 +1,13 @@
+services:
+  pinboard:
+    environment:
+      COOKIE_SECURE: "true"
+      TRUST_PROXY: "true"
+  tunnel:
+    image: ${TUNNEL_IMAGE:-cloudflare/cloudflared@sha256:072c067d25ccbe61d46e18f0d0723255f2bb5304f7317caa95b27031520ff92c}
+    command: [tunnel, --no-autoupdate, --url, "http://pinboard:8000"]
+    depends_on:
+      pinboard:
+        condition: service_healthy
+    networks: [task4]
+    restart: unless-stopped

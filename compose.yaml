@@ -1,0 +1,48 @@
+name: task4
+services:
+  hello:
+    profiles: [hello]
+    image: darksoda/task4-hello:0.2.0
+    build:
+      context: ./apps/hello
+      args:
+        REVISION: ${REVISION:-unknown}
+    ports:
+      - 127.0.0.1:8080:8000
+    environment:
+      APP_ENV: local
+    networks: [task4]
+  pinboard:
+    image: darksoda/task4-pinboard:0.3.0
+    build:
+      context: ./apps/pinboard
+      args:
+        REVISION: ${REVISION:-unknown}
+    ports:
+      - 127.0.0.1:8081:8000
+    environment:
+      SECRET_KEY: ${SECRET_KEY:?Run python3 scripts/init-env.py first}
+      DATABASE_PATH: /data/pinboard.sqlite
+      APP_TITLE: ${APP_TITLE:-Pinboard}
+      COOKIE_SECURE: "false"
+    volumes:
+      - notes-data:/data
+    networks: [task4]
+    restart: unless-stopped
+  notes-export:
+    profiles: [export]
+    image: darksoda/task4-notes-export:1.0.0
+    build:
+      context: ./tools/notes-export
+      args:
+        REVISION: ${REVISION:-unknown}
+    network_mode: none
+    volumes:
+      - ./examples:/input:ro
+      - export-data:/output
+    command: [--input, /input/notes.json, --output-dir, /output]
+volumes:
+  notes-data:
+  export-data:
+networks:
+  task4:
