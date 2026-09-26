@@ -1,0 +1,28 @@
+name: Check applications
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  python:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r apps/pinboard/backend/requirements.txt -r requirements-dev.txt
+      - run: ruff check apps/hello apps/pinboard/backend tools/notes-export tests scripts/init-env.py
+      - run: pytest -q
+  frontend:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - working-directory: apps/pinboard/frontend
+        run: |
+          npm ci
+          npm run lint
+          npm test
+          npm run build
